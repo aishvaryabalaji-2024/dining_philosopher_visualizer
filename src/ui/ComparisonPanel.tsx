@@ -128,12 +128,12 @@ export function ComparisonPanel({
           </div>
 
           <div className="comparison-controls">
-            <label htmlFor="comparison-ticks-select" className="control-label-inline">
+            <label htmlFor="comparison-cycles-select" className="control-label-inline">
               Cycles:
             </label>
             <select
-              id="comparison-ticks-select"
-              aria-label="Comparison tick count"
+              id="comparison-cycles-select"
+              aria-label="Comparison cycle count"
               className="control-select control-select-sm"
               value={ticksToRun}
               onChange={(e) => setTicksToRun(Number(e.target.value))}

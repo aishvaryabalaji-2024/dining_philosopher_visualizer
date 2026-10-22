@@ -36,7 +36,7 @@ describe('Step 9 & 10 — UI, SVG Table, Controls, Detectors, Event Log, and Com
     expect(html).toContain('aria-label="Simulation speed"');
     expect(html).toContain('aria-label="Start simulation"');
     expect(html).toContain('aria-label="Pause simulation"');
-    expect(html).toContain('aria-label="Step one tick"');
+    expect(html).toContain('aria-label="Step one cycle"');
     expect(html).toContain('aria-label="Reset simulation"');
     expect(html).toContain('CYCLES');
     expect(html).toContain('MEAN RULES');
@@ -176,7 +176,7 @@ describe('Step 9 & 10 — UI, SVG Table, Controls, Detectors, Event Log, and Com
     });
 
     // Verify Naive deadlock (tick 1) and non-deadlocking Semaphore/Monitor/CAS rows are rendered from real data
-    expect(deadlockHtml).toContain('Yes (tick 1)');
+    expect(deadlockHtml).toContain('Yes (Cycle 1)');
     expect(deadlockHtml).not.toContain('comparison-row-selected');
     expect(deadlockHtml).not.toContain('tradeoff-card');
     expect(deadlockHtml).toContain('Lock-free (simulated CAS — Seeded Random)');

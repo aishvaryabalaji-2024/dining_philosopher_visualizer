@@ -185,7 +185,7 @@ export function Controls({
         <button
           type="button"
           className="btn btn-outline"
-          aria-label="Step one tick"
+          aria-label="Step one cycle"
           onClick={onStep}
         >
           Step

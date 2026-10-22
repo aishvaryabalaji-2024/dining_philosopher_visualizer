@@ -162,7 +162,7 @@ export function SimulationTable({
           viewBox="0 0 620 600"
           className="dining-table-svg"
           role="img"
-          aria-label={`Dining Philosophers table at tick ${snapshot.tick}`}
+          aria-label={`Dining Philosophers table at Cycle ${snapshot.tick}`}
         >
           <defs>
             <marker

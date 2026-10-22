@@ -22,7 +22,7 @@ export interface FormattedComparisonRow {
 export function formatComparisonRow(row: StrategyComparisonRow): FormattedComparisonRow {
   const deadlock = row.deadlocked
     ? row.deadlockTick !== null
-      ? `Yes (tick ${row.deadlockTick})`
+      ? `Yes (Cycle ${row.deadlockTick})`
       : 'Yes'
     : 'No';
 
@@ -32,12 +32,12 @@ export function formatComparisonRow(row: StrategyComparisonRow): FormattedCompar
 
   const livelock = row.livelockSuspected
     ? row.livelockTick !== null
-      ? `Suspected (tick ${row.livelockTick})`
+      ? `Suspected (Cycle ${row.livelockTick})`
       : 'Suspected'
     : 'No';
 
-  const averageWait = `${row.averageWaitTicks.toFixed(2)} ticks`;
-  const maxWait = `${row.maxWaitTicks} ticks`;
+  const averageWait = `${row.averageWaitTicks.toFixed(2)} cycles`;
+  const maxWait = `${row.maxWaitTicks} cycles`;
   const mealsCompleted = `${row.totalMealsCompleted}`;
   const minMaxMeals = `${row.minMealsPerPhilosopher} / ${row.maxMealsPerPhilosopher}`;
   const fairness = row.fairnessScore.toFixed(2);
