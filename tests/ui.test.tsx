@@ -2,7 +2,6 @@ import { StrictMode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { createStrategyByName, SimulationEngine } from '../src/engine/simulation';
-import { runStrategyBatchComparison } from '../src/runner/batchRunner';
 import {
   CAS_LIVELOCK_PRESET,
   FORCE_DEADLOCK_PRESET,
@@ -13,12 +12,12 @@ import { App, buildSimulationConfig, DetectorBanners } from '../src/ui/App';
 import {
   COMPARISON_SPECS,
   ComparisonPanel,
-  STRATEGY_TRADEOFF_NOTES,
 } from '../src/ui/ComparisonPanel';
 import { nextDeterministicSeed } from '../src/ui/Controls';
 import { EventLog } from '../src/ui/EventLog';
 import { SimulationTable } from '../src/ui/SimulationTable';
 import { StrategyDetails } from '../src/ui/StrategyDetails';
+import { runStrategyBatchComparison } from '../src/runner/batchRunner';
 
 describe('Step 9 & 10 — UI, SVG Table, Controls, Detectors, Event Log, and Comparison Panel', () => {
   it('renders App inside React StrictMode at Tick 0 with all accessible controls and initial snapshot', () => {
@@ -43,7 +42,11 @@ describe('Step 9 & 10 — UI, SVG Table, Controls, Detectors, Event Log, and Com
     expect(html).toContain('MEAN RULES');
     expect(html).toContain('MEALS COMPLETED');
     expect(html).toContain('CYCLE 0');
-    expect(html).toContain('SIMULATION_INIT');
+
+    // Confirms event log, per-philosopher metrics, and strategy internals are removed from App
+    expect(html).not.toContain('Append-Only Event Log');
+    expect(html).not.toContain('Per-Philosopher Metrics');
+    expect(html).not.toContain('Strategy Internals');
   });
 
   it('matches every philosopher state and fork owner in SimulationTable to the engine snapshot', () => {
@@ -157,7 +160,7 @@ describe('Step 9 & 10 — UI, SVG Table, Controls, Detectors, Event Log, and Com
     expect(nextDeterministicSeed(42)).toBe(rerolled);
   });
 
-  it('connects ComparisonPanel to real batchRunner rows, strategy trade-offs, and explicit modeling notes', () => {
+  it('connects ComparisonPanel to real batchRunner rows and explicit modeling notes', () => {
     const deadlockHtml = renderToStaticMarkup(
       <ComparisonPanel
         scenario={FORCE_DEADLOCK_PRESET}
@@ -174,8 +177,9 @@ describe('Step 9 & 10 — UI, SVG Table, Controls, Detectors, Event Log, and Com
 
     // Verify Naive deadlock (tick 1) and non-deadlocking Semaphore/Monitor/CAS rows are rendered from real data
     expect(deadlockHtml).toContain('Yes (tick 1)');
-    expect(deadlockHtml).toContain('comparison-row-selected');
-    expect(deadlockHtml).toContain('tradeoff-card-selected');
+    expect(deadlockHtml).not.toContain('comparison-row-selected');
+    expect(deadlockHtml).not.toContain('tradeoff-card');
+    expect(deadlockHtml).toContain('Lock-free (simulated CAS — Seeded Random)');
     for (const row of expectedDeadlockRows) {
       expect(deadlockHtml).toContain(row.strategyLabel);
       expect(deadlockHtml).toContain(`${row.totalMealsCompleted}`);
@@ -186,13 +190,9 @@ describe('Step 9 & 10 — UI, SVG Table, Controls, Detectors, Event Log, and Com
       <ComparisonPanel scenario={STARVATION_PRESET} seed={42} />
     );
     expect(starvationHtml).toContain('starvation detected by threshold (P1)');
-
-    // Verify explicit modeling & detector notes and all 4 static strategy trade-off cards
-    expect(starvationHtml).toContain('Starvation Note (Threshold-Detected):');
-    expect(starvationHtml).toContain('Simulated CAS Note (Model vs. Hardware Atomics):');
-    for (const note of STRATEGY_TRADEOFF_NOTES) {
-      expect(starvationHtml).toContain(note.title);
-    }
+    expect(starvationHtml).not.toContain('comparison-notes-callout');
+    expect(starvationHtml).not.toContain('Starvation Note (Threshold-Detected):');
+    expect(starvationHtml).not.toContain('Simulated CAS Note (Model vs. Hardware Atomics):');
   });
 
   it('renders all six compact event log filter chips', () => {
@@ -205,5 +205,34 @@ describe('Step 9 & 10 — UI, SVG Table, Controls, Detectors, Event Log, and Com
     expect(logHtml).toContain('Meals');
     expect(logHtml).toContain('Locks/Forks');
     expect(logHtml).toContain('Deadlock');
+  });
+
+  it('renders ComparisonPanel with cycle count options (30, 60, 100) and displays recalculated batch metrics', () => {
+    const html30 = renderToStaticMarkup(
+      <ComparisonPanel
+        scenario={NORMAL_PRESET}
+        seed={42}
+        initialTicks={30}
+      />
+    );
+    const html100 = renderToStaticMarkup(
+      <ComparisonPanel
+        scenario={NORMAL_PRESET}
+        seed={42}
+        initialTicks={100}
+      />
+    );
+
+    // Dropdown contains 30, 60, and 100 cycles options
+    expect(html30).toContain('value="30"');
+    expect(html30).toContain('value="60"');
+    expect(html30).toContain('value="100"');
+
+    // Subtitle is removed per UI cleanup
+    expect(html30).not.toContain('Headless deterministic batch runs over');
+    expect(html100).not.toContain('Headless deterministic batch runs over');
+
+    // Distinct simulation duration generates distinct recalculated meal counts
+    expect(html30).not.toEqual(html100);
   });
 });

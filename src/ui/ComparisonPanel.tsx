@@ -2,11 +2,12 @@ import { useMemo, useState } from 'react';
 import { CasBackoffMode, ScenarioPreset, StrategyName } from '../engine/types';
 import { runStrategyBatchComparison, StrategyRunSpec } from '../runner/batchRunner';
 import { formatComparisonRows } from '../runner/formatResults';
-import { DEFAULT_PHILOSOPHERS, toOrdinal } from '../scenarios/philosopherCount';
+import { toOrdinal } from '../scenarios/philosopherCount';
 
 export interface ComparisonPanelProps {
   readonly scenario: ScenarioPreset;
   readonly seed: number;
+  readonly initialTicks?: number;
   readonly activeStrategy?: StrategyName;
   readonly activeCasBackoffMode?: CasBackoffMode;
   readonly onSelectStrategy?: (strategy: StrategyName) => void;
@@ -56,7 +57,7 @@ export const STRATEGY_TRADEOFF_NOTES: readonly StrategyTradeoffNote[] = [
     strategyKey: 'monitor',
     title: 'Monitor (test(i) + Condition Variables)',
     mechanism:
-      'pickup(i) and putdown(i) evaluate test(i) inside a monitor: both forks are allocated atomically only when neither neighbor is Eating.',
+      'pickup(i) and putdown(i) coordinate via test(i): both forks are allocated atomically only when neither neighbor is Eating.',
     tradeoff:
       'Eliminates hold-and-wait (never holds a single fork while waiting) and achieves high throughput, but without a FIFO queue fast-cycling neighbors can starve a middle philosopher.',
   },
@@ -99,15 +100,9 @@ export function getStrategyTradeoffNotes(
 export function ComparisonPanel({
   scenario,
   seed,
-  activeStrategy,
-  activeCasBackoffMode,
-  onSelectStrategy,
+  initialTicks,
 }: ComparisonPanelProps) {
-  const [ticksToRun, setTicksToRun] = useState<number>(60);
-  const currentStrategy: StrategyName =
-    activeStrategy ?? scenario.config.strategy ?? 'naive';
-  const currentCasMode: CasBackoffMode =
-    activeCasBackoffMode ?? scenario.config.casBackoffMode ?? 'random';
+  const [ticksToRun, setTicksToRun] = useState<number>(initialTicks ?? 60);
 
   const formattedRows = useMemo(() => {
     const rawRows = runStrategyBatchComparison({
@@ -130,11 +125,6 @@ export function ComparisonPanel({
             <h2 className="panel-title">
               Cross-Strategy Batch Comparison ({scenario.name}, Seed {seed})
             </h2>
-            <span className="panel-subtitle">
-              Headless deterministic batch runs over {ticksToRun} cycles · Starvation
-              threshold ≥{scenario.config.starvationThresholdTicks ?? 18}c · Livelock
-              window {scenario.config.livelockWindowTicks ?? 12}c
-            </span>
           </div>
 
           <div className="comparison-controls">
@@ -169,123 +159,57 @@ export function ComparisonPanel({
                 <th>Avg Wait</th>
                 <th>Max Wait</th>
                 <th>Meals Completed</th>
-                <th>Min / Max Meals</th>
-                <th>Jain Fairness</th>
                 <th>CAS Retries / Rollbacks</th>
               </tr>
             </thead>
             <tbody>
-              {formattedRows.map((row) => {
-                const isSelectedRow =
-                  row.raw.strategy === currentStrategy &&
-                  (row.raw.strategy !== 'cas' ||
-                    row.raw.casBackoffMode === currentCasMode);
-
-                return (
-                  <tr
-                    key={row.strategyLabel}
-                    data-comparison-strategy={row.strategyLabel}
-                    className={isSelectedRow ? 'comparison-row-selected' : undefined}
-                  >
-                    <td>
-                      <strong>{row.strategyLabel}</strong>
-                    </td>
-                    <td>
-                      <span
-                        className={`outcome-text ${
-                          row.raw.deadlocked ? 'outcome-danger' : 'outcome-ok'
-                        }`}
-                      >
-                        {row.deadlock}
-                      </span>
-                    </td>
-                    <td>
-                      <span
-                        className={`outcome-text ${
-                          row.raw.starvationDetected ? 'outcome-warning' : 'outcome-ok'
-                        }`}
-                      >
-                        {row.starvation}
-                      </span>
-                    </td>
-                    <td>
-                      <span
-                        className={`outcome-text ${
-                          row.raw.livelockSuspected ? 'outcome-warning' : 'outcome-ok'
-                        }`}
-                      >
-                        {row.livelock}
-                      </span>
-                    </td>
-                    <td className="mono-cell">{row.averageWait}</td>
-                    <td className="mono-cell">{row.maxWait}</td>
-                    <td className="mono-cell">
-                      <strong>{row.mealsCompleted}</strong>
-                    </td>
-                    <td className="mono-cell muted-cell">{row.minMaxMeals}</td>
-                    <td className="mono-cell">{row.fairness}</td>
-                    <td className="mono-cell muted-cell">{row.casRetries}</td>
-                  </tr>
-                );
-              })}
+              {formattedRows.map((row) => (
+                <tr
+                  key={row.strategyLabel}
+                  data-comparison-strategy={row.strategyLabel}
+                >
+                  <td>
+                    <strong>{row.strategyLabel}</strong>
+                  </td>
+                  <td>
+                    <span
+                      className={`outcome-text ${
+                        row.raw.deadlocked ? 'outcome-danger' : 'outcome-ok'
+                      }`}
+                    >
+                      {row.deadlock}
+                    </span>
+                  </td>
+                  <td>
+                    <span
+                      className={`outcome-text ${
+                        row.raw.starvationDetected ? 'outcome-warning' : 'outcome-ok'
+                      }`}
+                    >
+                      {row.starvation}
+                    </span>
+                  </td>
+                  <td>
+                    <span
+                      className={`outcome-text ${
+                        row.raw.livelockSuspected ? 'outcome-warning' : 'outcome-ok'
+                      }`}
+                    >
+                      {row.livelock}
+                    </span>
+                  </td>
+                  <td className="mono-cell">{row.averageWait}</td>
+                  <td className="mono-cell">{row.maxWait}</td>
+                  <td className="mono-cell">
+                    <strong>{row.mealsCompleted}</strong>
+                  </td>
+                  <td className="mono-cell muted-cell">{row.casRetries}</td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
-
-        {/* Methodological & Modeling Notes */}
-        <div
-          className="comparison-notes-callout"
-          aria-label="Detector and Modeling Notes"
-        >
-          <p className="comparison-note-item">
-            <strong>Starvation Note (Threshold-Detected):</strong> Starvation is reported
-            as <code>starvation detected by threshold</code> when a philosopher waits at
-            least <code>{scenario.config.starvationThresholdTicks ?? 18}</code>{' '}
-            consecutive cycles while its neighbors complete meals during that interval. In
-            a finite simulation run, a threshold flag measures severe unfairness over a
-            bounded window rather than a mathematical proof of infinite future waiting.
-          </p>
-          <p className="comparison-note-item">
-            <strong>Simulated CAS Note (Model vs. Hardware Atomics):</strong>{' '}
-            <code>Lock-free (simulated CAS)</code> models single-fork compare-and-swap
-            semantics (<code>CAS(fork[f], null → i)</code>) one fork at a time in discrete
-            deterministic cycles with rollback and back-off. It is an algorithmic OS model
-            and not real hardware atomic CPU instruction execution (such as{' '}
-            <code>LOCK CMPXCHG</code> across kernel threads).
-          </p>
-        </div>
       </section>
-
-      {/* F. Strategy Explanation Cards */}
-      <div className="tradeoffs-grid" aria-label="Strategy Trade-off Summary">
-        {getStrategyTradeoffNotes(
-          scenario.config.philosopherCount ?? DEFAULT_PHILOSOPHERS
-        ).map((item) => {
-          const isSelectedCard = item.strategyKey === currentStrategy;
-          return (
-            <article
-              key={item.title}
-              className={`tradeoff-card ${
-                isSelectedCard ? 'tradeoff-card-selected' : ''
-              } ${onSelectStrategy ? 'tradeoff-card-interactive' : ''}`}
-              onClick={
-                onSelectStrategy ? () => onSelectStrategy(item.strategyKey) : undefined
-              }
-            >
-              <div className="tradeoff-card-header">
-                <h3 className="tradeoff-title">{item.title}</h3>
-                {isSelectedCard && <span className="selected-pill">Active</span>}
-              </div>
-              <p className="tradeoff-text">
-                <strong>Mechanism:</strong> {item.mechanism}
-              </p>
-              <p className="tradeoff-text">
-                <strong>Result &amp; Trade-off:</strong> {item.tradeoff}
-              </p>
-            </article>
-          );
-        })}
-      </div>
     </div>
   );
 }

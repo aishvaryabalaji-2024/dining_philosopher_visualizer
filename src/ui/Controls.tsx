@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { CasBackoffMode, ScenarioPreset, StrategyName } from '../engine/types';
-import { getScenarioDescription, SCENARIO_PRESETS } from '../scenarios/presets';
+import { CasBackoffMode, StrategyName } from '../engine/types';
+import { SCENARIO_PRESETS } from '../scenarios/presets';
 import { toOrdinal } from '../scenarios/philosopherCount';
 
 export interface ControlsProps {
@@ -110,11 +110,6 @@ export function Controls({
   onStep,
   onReset,
 }: ControlsProps) {
-  const activeScenario: ScenarioPreset =
-    SCENARIO_PRESETS.find((preset) => preset.id === scenarioId) ?? SCENARIO_PRESETS[0]!;
-  const activeStrategyOption =
-    STRATEGY_OPTIONS.find((opt) => opt.value === strategy) ?? STRATEGY_OPTIONS[0]!;
-
   // Local draft so the user can type freely; only valid integers in range are applied.
   const [philosopherCountDraft, setPhilosopherCountDraft] = useState<string>(
     String(philosopherCount)
@@ -226,9 +221,7 @@ export function Controls({
             onBlur={handlePhilosopherCountBlur}
           />
           <p className="control-hint">
-            {isPhilosopherCountDraftInvalid
-              ? `Enter a whole number from ${minPhilosophers} to ${maxPhilosophers}. Currently using ${philosopherCount}.`
-              : `${philosopherCount} philosophers and ${philosopherCount} forks (${minPhilosophers}–${maxPhilosophers}). Changing this resets the simulation.`}
+            Enter an integer from {minPhilosophers} to {maxPhilosophers}
           </p>
         </div>
 
@@ -250,9 +243,6 @@ export function Controls({
               </option>
             ))}
           </select>
-          <p className="control-hint">
-            {getScenarioDescription(activeScenario, philosopherCount)}
-          </p>
         </div>
 
         {/* 2. Synchronization Strategy Selector */}
@@ -273,9 +263,6 @@ export function Controls({
               </option>
             ))}
           </select>
-          <p className="control-hint">
-            {getStrategySummary(activeStrategyOption.value, philosopherCount)}
-          </p>
         </div>
 
         {/* Optional CAS Back-off Selector */}

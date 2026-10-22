@@ -4,7 +4,6 @@ import {
   CasBackoffMode,
   ScenarioPreset,
   SimulationConfig,
-  SimulationEvent,
   SimulationSnapshot,
   StrategyName,
 } from '../engine/types';
@@ -16,9 +15,7 @@ import {
 } from '../scenarios/philosopherCount';
 import { ComparisonPanel } from './ComparisonPanel';
 import { Controls } from './Controls';
-import { EventLog } from './EventLog';
-import { PhilosopherMetricsTable, SimulationTable } from './SimulationTable';
-import { StrategyDetails } from './StrategyDetails';
+import { SimulationTable } from './SimulationTable';
 
 export { DEFAULT_PHILOSOPHERS, MAX_PHILOSOPHERS, MIN_PHILOSOPHERS };
 
@@ -128,9 +125,6 @@ export function App() {
   const [snapshot, setSnapshot] = useState<SimulationSnapshot>(() =>
     engineRef.current!.getSnapshot()
   );
-  const [events, setEvents] = useState<readonly SimulationEvent[]>(() =>
-    engineRef.current!.getEventLog()
-  );
 
   const resetEngineWith = (
     nextScenarioId: string,
@@ -149,9 +143,7 @@ export function App() {
     );
     const engine = engineRef.current!;
     const nextSnapshot = engine.reset(cfg, createStrategyByName(nextStrategy));
-    const nextEvents = engine.getEventLog();
     setSnapshot(nextSnapshot);
-    setEvents(nextEvents);
   };
 
   const handleScenarioChange = (nextScenarioId: string) => {
@@ -207,11 +199,8 @@ export function App() {
   const handleStep = () => {
     setIsRunning(false);
     const engine = engineRef.current!;
-    // Advance outside of React state updater functions so React StrictMode never double-steps
     const nextSnapshot = engine.step();
-    const nextEvents = engine.getEventLog();
     setSnapshot(nextSnapshot);
-    setEvents(nextEvents);
   };
 
   const handleReset = () => {
@@ -230,9 +219,7 @@ export function App() {
         return;
       }
       const nextSnapshot = engine.step();
-      const nextEvents = engine.getEventLog();
       setSnapshot(nextSnapshot);
-      setEvents(nextEvents);
 
       if (nextSnapshot.detectors.deadlocked) {
         setIsRunning(false);
@@ -263,14 +250,6 @@ export function App() {
 
   return (
     <div className="workspace-root">
-      {/* Subtle Background Diagonal Streaks */}
-      <div className="ambient-streaks" aria-hidden="true">
-        <span className="streak streak-1" />
-        <span className="streak streak-2" />
-        <span className="streak streak-3" />
-        <span className="streak streak-4" />
-      </div>
-
       <main className="app-shell">
         {/* A. Compact Top Navigation Bar */}
         <header className="top-nav">
@@ -349,16 +328,7 @@ export function App() {
           />
         </div>
 
-        {/* C. Secondary Information Workspace: Left Metrics Table + Right Event Log */}
-        <div className="secondary-workspace-grid">
-          <PhilosopherMetricsTable snapshot={snapshot} />
-          <EventLog events={events} />
-        </div>
-
-        {/* D. Strategy Internals */}
-        <StrategyDetails snapshot={snapshot} />
-
-        {/* E & F. Cross-Strategy Comparison Table & Strategy Explanation Cards */}
+        {/* C. Cross-Strategy Comparison Table */}
         <ComparisonPanel
           scenario={activeScenario}
           seed={seed}

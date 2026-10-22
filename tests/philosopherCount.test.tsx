@@ -96,6 +96,7 @@ describe('Philosopher count: defaults', () => {
       />
     );
     expect(html).toContain('Number of Philosophers');
+    expect(html).toContain('Enter an integer from 3 to 8');
     expect(html).toMatch(/id="philosopher-count-input"[^>]*min="3"[^>]*max="8"/);
     expect(html).toMatch(/id="philosopher-count-input"[^>]*value="5"/);
     expect(html.indexOf('philosopher-count-input')).toBeLessThan(

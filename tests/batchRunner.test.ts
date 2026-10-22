@@ -130,4 +130,69 @@ describe('Headless Batch Runner and Cross-Strategy Comparison', () => {
     expect(casRow.livelockSuspected).toBe(true);
     expect(casRow.fairnessScore).toBe(0);
   });
+
+  it('recalculates all strategy metrics dynamically when cycle count changes (30, 60, 100 cycles) with seed 42', () => {
+    const specs = [
+      { strategy: 'naive', label: 'Naive (Left → Right)' },
+      { strategy: 'semaphore', label: 'Semaphore (N−1 Permits, FIFO)' },
+      { strategy: 'monitor', label: 'Monitor (test(i) + Condition)' },
+      { strategy: 'cas', casBackoffMode: 'fixed', label: 'Lock-free (simulated CAS — Fixed Back-off)' },
+      { strategy: 'cas', casBackoffMode: 'random', label: 'Lock-free (simulated CAS — Seeded Random)' },
+    ] as const;
+
+    const run30 = runStrategyBatchComparison({
+      scenario: NORMAL_PRESET,
+      seed: 42,
+      ticks: 30,
+      strategies: specs,
+    });
+    const run60 = runStrategyBatchComparison({
+      scenario: NORMAL_PRESET,
+      seed: 42,
+      ticks: 60,
+      strategies: specs,
+    });
+    const run100 = runStrategyBatchComparison({
+      scenario: NORMAL_PRESET,
+      seed: 42,
+      ticks: 100,
+      strategies: specs,
+    });
+
+    // 1. Duration (ticksRun) matches requested cycles
+    expect(run30.every((r) => r.ticksRun === 30)).toBe(true);
+    expect(run60.every((r) => r.ticksRun === 60)).toBe(true);
+    expect(run100.every((r) => r.ticksRun === 100)).toBe(true);
+
+    // 2. Metrics are genuinely calculated: meal counts strictly increase as cycle count increases
+    const monitor30 = run30.find((r) => r.strategy === 'monitor')!;
+    const monitor60 = run60.find((r) => r.strategy === 'monitor')!;
+    const monitor100 = run100.find((r) => r.strategy === 'monitor')!;
+    expect(monitor30.totalMealsCompleted).toBeLessThan(monitor60.totalMealsCompleted);
+    expect(monitor60.totalMealsCompleted).toBeLessThan(monitor100.totalMealsCompleted);
+
+    // 3. CAS attempts increase with duration
+    const casRandom30 = run30.find(
+      (r) => r.strategy === 'cas' && r.casBackoffMode === 'random'
+    )!;
+    const casRandom60 = run60.find(
+      (r) => r.strategy === 'cas' && r.casBackoffMode === 'random'
+    )!;
+    const casRandom100 = run100.find(
+      (r) => r.strategy === 'cas' && r.casBackoffMode === 'random'
+    )!;
+    expect(casRandom30.casAttempts!).toBeLessThan(casRandom60.casAttempts!);
+    expect(casRandom60.casAttempts!).toBeLessThan(casRandom100.casAttempts!);
+    expect(casRandom30.casRollbacks!).toBeLessThanOrEqual(casRandom60.casRollbacks!);
+    expect(casRandom60.casRollbacks!).toBeLessThanOrEqual(casRandom100.casRollbacks!);
+
+    // 4. Repeated runs with seed 42 are strictly deterministic and reproducible
+    const run60Repeat = runStrategyBatchComparison({
+      scenario: NORMAL_PRESET,
+      seed: 42,
+      ticks: 60,
+      strategies: specs,
+    });
+    expect(run60).toEqual(run60Repeat);
+  });
 });

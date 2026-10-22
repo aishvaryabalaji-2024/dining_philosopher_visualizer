@@ -34,28 +34,28 @@ export const STATE_COLORS: Readonly<
   >
 > = {
   Thinking: {
-    fill: '#0d0d10',
+    fill: '#ffffff',
     stroke: '#71717a',
-    badgeBg: '#27272a',
-    text: '#a1a1aa',
+    badgeBg: '#f4f4f5',
+    text: '#52525b',
   },
   Hungry: {
-    fill: '#0d0d10',
-    stroke: '#d4a24c',
-    badgeBg: '#3f3018',
-    text: '#e7c582',
+    fill: '#ffffff',
+    stroke: '#d97706',
+    badgeBg: '#fef3c7',
+    text: '#92400e',
   },
   Waiting: {
-    fill: '#0d0d10',
-    stroke: '#f87171',
-    badgeBg: '#3f1a1a',
-    text: '#fca5a5',
+    fill: '#ffffff',
+    stroke: '#dc2626',
+    badgeBg: '#fee2e2',
+    text: '#991b1b',
   },
   Eating: {
-    fill: '#0d0d10',
-    stroke: '#4ade80',
-    badgeBg: '#133823',
-    text: '#86efac',
+    fill: '#ffffff',
+    stroke: '#16a34a',
+    badgeBg: '#dcfce7',
+    text: '#166534',
   },
 };
 
@@ -183,8 +183,8 @@ export function SimulationTable({
             cx={CENTER_X}
             cy={CENTER_Y}
             r={ARENA_RING_RADIUS}
-            fill="#070709"
-            stroke={isDeadlocked ? 'rgba(239, 68, 68, 0.45)' : 'rgba(255, 255, 255, 0.08)'}
+            fill="#fafafa"
+            stroke={isDeadlocked ? 'rgba(239, 68, 68, 0.45)' : '#e4e4e7'}
             strokeWidth="1.25"
           />
 
@@ -193,8 +193,8 @@ export function SimulationTable({
             cx={CENTER_X}
             cy={CENTER_Y}
             r={CENTER_HUB_RADIUS}
-            fill="#0a0a0d"
-            stroke={isDeadlocked ? '#ef4444' : 'rgba(255, 255, 255, 0.07)'}
+            fill="#ffffff"
+            stroke={isDeadlocked ? '#ef4444' : '#e4e4e7'}
             strokeWidth="1"
           />
 
@@ -278,7 +278,7 @@ export function SimulationTable({
           {snapshot.forks.map((fork) => {
             const pos = getForkPosition(fork, count);
             const isHeld = fork.ownerId !== null;
-            const strokeColor = isHeld ? '#8b5cf6' : '#52525b';
+            const strokeColor = isHeld ? '#8b5cf6' : '#a1a1aa';
 
             return (
               <g
@@ -298,7 +298,7 @@ export function SimulationTable({
                     width={16}
                     height={36}
                     rx={8}
-                    fill="#0d0d10"
+                    fill="#ffffff"
                     stroke={strokeColor}
                     strokeWidth={isHeld ? '2.2' : '1.4'}
                   />
@@ -308,7 +308,7 @@ export function SimulationTable({
                     y1={-3}
                     x2={0}
                     y2={12}
-                    stroke={isHeld ? '#c4b5fd' : '#a1a1aa'}
+                    stroke={isHeld ? '#8b5cf6' : '#71717a'}
                     strokeWidth="2.4"
                     strokeLinecap="round"
                   />
@@ -318,7 +318,7 @@ export function SimulationTable({
                     y1={-3}
                     x2={4.2}
                     y2={-3}
-                    stroke={isHeld ? '#c4b5fd' : '#a1a1aa'}
+                    stroke={isHeld ? '#8b5cf6' : '#71717a'}
                     strokeWidth="1.8"
                     strokeLinecap="round"
                   />
@@ -328,7 +328,7 @@ export function SimulationTable({
                     y1={-12}
                     x2={-4.2}
                     y2={-3}
-                    stroke={isHeld ? '#c4b5fd' : '#a1a1aa'}
+                    stroke={isHeld ? '#8b5cf6' : '#71717a'}
                     strokeWidth="1.7"
                     strokeLinecap="round"
                   />
@@ -337,7 +337,7 @@ export function SimulationTable({
                     y1={-13}
                     x2={0}
                     y2={-3}
-                    stroke={isHeld ? '#c4b5fd' : '#a1a1aa'}
+                    stroke={isHeld ? '#8b5cf6' : '#71717a'}
                     strokeWidth="1.7"
                     strokeLinecap="round"
                   />
@@ -346,7 +346,7 @@ export function SimulationTable({
                     y1={-12}
                     x2={4.2}
                     y2={-3}
-                    stroke={isHeld ? '#c4b5fd' : '#a1a1aa'}
+                    stroke={isHeld ? '#8b5cf6' : '#71717a'}
                     strokeWidth="1.7"
                     strokeLinecap="round"
                   />
@@ -356,7 +356,7 @@ export function SimulationTable({
                   y={31}
                   textAnchor="middle"
                   className="svg-fork-label"
-                  fill={isHeld ? '#c4b5fd' : '#a1a1aa'}
+                  fill={isHeld ? '#6d28d9' : '#52525b'}
                 >
                   F{fork.id} {isHeld ? `· P${fork.ownerId}` : ''}
                 </text>
@@ -399,7 +399,7 @@ export function SimulationTable({
                     cy={0}
                     r={50}
                     fill="none"
-                    stroke="#4ade80"
+                    stroke="#16a34a"
                     strokeWidth="1.5"
                     className="eating-pulse-ring"
                   />
@@ -433,7 +433,7 @@ export function SimulationTable({
                   y={-15}
                   textAnchor="middle"
                   className="svg-phil-title"
-                  fill="#f4f4f5"
+                  fill="#18181b"
                 >
                   P{phil.id}
                 </text>
@@ -455,7 +455,7 @@ export function SimulationTable({
                   y={15}
                   textAnchor="middle"
                   className="svg-phil-meta"
-                  fill="#a1a1aa"
+                  fill="#52525b"
                 >
                   {formatPhilosopherTimer(phil)}
                 </text>
@@ -466,7 +466,7 @@ export function SimulationTable({
                   y={28}
                   textAnchor="middle"
                   className="svg-phil-forks"
-                  fill={phil.heldForkIds.length > 0 ? '#c4b5fd' : '#71717a'}
+                  fill={phil.heldForkIds.length > 0 ? '#6d28d9' : '#71717a'}
                 >
                   Forks: {heldLabel}
                 </text>
@@ -491,7 +491,7 @@ export function SimulationTable({
                       width={108}
                       height={18}
                       rx={4}
-                      fill="#180a0d"
+                      fill="#fef2f2"
                       stroke="#ef4444"
                       strokeWidth="1"
                     />
@@ -500,7 +500,7 @@ export function SimulationTable({
                       y={2}
                       textAnchor="middle"
                       className="svg-starved-badge"
-                      fill="#fca5a5"
+                      fill="#991b1b"
                     >
                       STARVED (≥{snapshot.config.starvationThresholdTicks}t)
                     </text>
