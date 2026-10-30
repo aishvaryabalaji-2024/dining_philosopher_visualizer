@@ -1,2 +1,2 @@
 # Dining Philosophers OS Concurrency Simulator
-Live Demo link : 
+Visualizes different synchronization methodologies
